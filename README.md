@@ -1,0 +1,2 @@
+# -TO-INFINITY-2025_DESIGN-TECHNOLOGY_PERSONAL_PROJECT
+## 김도완 _ 2025 부산대학교 디자인앤테크놀로지전공 졸업전시 개인작품
