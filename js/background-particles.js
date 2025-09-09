@@ -19,9 +19,9 @@ class BackgroundParticles {
         for (let i = 0; i < this.particleCount; i++) {
             const i3 = i * 3;
             // -500 ~ 500 사이의 랜덤한 위치
-            this.positions[i3 + 0] = (Math.random() - 0.5) * 1000;
-            this.positions[i3 + 1] = (Math.random() - 0.5) * 1000;
-            this.positions[i3 + 2] = (Math.random() - 0.5) * 1000;
+            this.positions[i3 + 0] = (Math.random() - 0.5) * 600;
+            this.positions[i3 + 1] = (Math.random() - 0.5) * 600;
+            this.positions[i3 + 2] = (Math.random() - 0.5) * 600;
             
             // 초기 속도는 0으로 설정
             this.velocities[i3 + 0] = 0;

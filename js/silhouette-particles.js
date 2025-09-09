@@ -3,7 +3,7 @@ class SilhouetteParticles {
         this.scene = scene;
         this.camera = camera;
         this.particleCount = particleCount;
-        this.debugMode = true;
+        this.debugMode = false;
         
         this.init();
         this.setupMediaPipe();
@@ -24,6 +24,8 @@ class SilhouetteParticles {
         this.debugCanvas.height = 480;
 
         // 실루엣 파티클을 위한 별도 시스템
+        this.textureLoader = new THREE.TextureLoader();
+        this.particleTexture = this.textureLoader.load('./asset.png');
         this.silhouetteGeometry = new THREE.BufferGeometry();
         this.silhouettePositions = new Float32Array(this.particleCount * 3);
         for (let i = 0; i < this.particleCount; i++) {
@@ -40,7 +42,8 @@ class SilhouetteParticles {
             alphaTest: 0.01,
             opacity: 0.8,
             depthWrite: false,
-            blending: THREE.AdditiveBlending
+            blending: THREE.AdditiveBlending,
+            map: this.particleTexture
         });
 
         this.silhouetteSystem = new THREE.Points(this.silhouetteGeometry, this.silhouetteMaterial);
@@ -87,7 +90,7 @@ class SilhouetteParticles {
                         const scaleY = viewSize.height * 0.8; // 화면 높이의 80%로 설정
                         const scaleX = scaleY * (this.maskCanvas.width / this.maskCanvas.height); // 비율 유지
                         
-                        posAttr[pIndex * 3] = ndcX * scaleX;
+                        posAttr[pIndex * 3] = -ndcX * scaleX;
                         posAttr[pIndex * 3 + 1] = ndcY * scaleY;
                         posAttr[pIndex * 3 + 2] = 0; // Z축 고정
                         

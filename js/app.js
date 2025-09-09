@@ -20,7 +20,7 @@ class App {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
 
-        this.camera.position.z = 100; // 파티클을 더 잘 보기 위해 카메라를 뒤로 이동
+        this.camera.position.z = 50; // 파티클을 더 잘 보기 위해 카메라를 뒤로 이동
 
         // 배경 파티클 시스템 초기화
         this.backgroundParticles = new BackgroundParticles(this.scene);
