@@ -7,3 +7,11 @@ body {
 canvas {
     display: block;
 }
+
+#maskCanvas {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+}

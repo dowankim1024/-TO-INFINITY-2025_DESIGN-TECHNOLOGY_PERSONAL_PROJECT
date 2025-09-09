@@ -7,10 +7,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <video id="webcam" autoplay muted playsinline style="display:none;"></video>
+    <canvas id="maskCanvas" style="display:none; visibility:hidden;"></canvas>
+    <canvas id="debugCanvas" style="position:fixed; top:0; left:0; z-index:10;"></canvas>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     
-    <script src="script.js"></script>
+    <script src="js/background-particles.js"></script>
+    <script src="js/silhouette-particles.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
