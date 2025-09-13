@@ -17,48 +17,125 @@
 ├── style.css                     # CSS 스타일시트
 ├── asset.png                     # 파티클에 사용되는 텍스처 이미지
 ├── js/                          # JavaScript 모듈 디렉토리
+│   ├── constants.js             # 애플리케이션 설정 상수
 │   ├── background-particles.js   # 배경 파티클 시스템
 │   ├── silhouette-particles.js   # 실루엣 파티클 시스템 (MediaPipe)
+│   ├── explosion-particles.js    # 폭발 효과 파티클 시스템
+│   ├── camera-controller.js      # 카메라 이동 및 시퀀스 제어
 │   └── app.js                   # 메인 애플리케이션
 └── README.md                    # 프로젝트 설명서
 ```
 
 ## 📁 파일별 상세 설명
 
-### 1. `index.html` - 메인 HTML 파일
+### 1. `constants.js` - 애플리케이션 설정 상수
 
-```html
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Particle Universe</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <!-- 웹캠 비디오 (숨김 처리) -->
-    <video id="webcam" autoplay muted playsinline style="display:none;"></video>
-    
-    <!-- MediaPipe 마스크 처리를 위한 캔버스 (숨김 처리) -->
-    <canvas id="maskCanvas" style="display:none; visibility:hidden;"></canvas>
-    
-    <!-- 디버그용 캔버스 (사람 인식 영역을 빨간색으로 표시) -->
-    <canvas id="debugCanvas" style="position:fixed; top:0; left:0; z-index:10;"></canvas>
-    
-    <!-- 외부 라이브러리들 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    
-    <!-- 우리가 만든 모듈들 -->
-    <script src="js/background-particles.js"></script>
-    <script src="js/silhouette-particles.js"></script>
-    <script src="js/app.js"></script>
-</body>
-</html>
-```
+**목적**: 애플리케이션의 모든 설정값을 한 곳에서 중앙 관리하여 사용자가 쉽게 조절할 수 있도록 함
+
+**주요 설정 카테고리**:
+- **CAMERA**: 카메라의 초기 위치, 목표 위치, 이동 속도, 폭발 트리거 좌표
+- **PERSON_DETECTION**: 사람 감지 후 대기 시간과 감지 임계값
+- **EXPLOSION**: 폭발 파티클의 개수, 크기, 속도 범위, 지속 시간
+- **SCREEN_EFFECTS**: 검은 화면 지속 시간, 페이드 시간, 리셋 대기 시간
+- **BACKGROUND_PARTICLES**: 배경 파티클의 개수, 크기, 노이즈 설정
+- **SILHOUETTE_PARTICLES**: 실루엣 파티클의 개수, 크기, 투명도 설정
+- **COLOR_PALETTE**: 폭발 효과에 사용되는 색상 팔레트
+- **COLOR_PROBABILITY**: 각 색상의 출현 확률
+
+**사용 방법**: 파일을 열어서 원하는 값들을 직접 수정하면 즉시 적용됨
+
+### 2. `camera-controller.js` - 카메라 이동 및 시퀀스 제어
+
+**목적**: 사람 감지부터 시스템 리셋까지 전체 인터랙티브 시퀀스를 관리하고 제어
+
+**주요 로직**:
+
+**상태 관리**:
+- `isMoving`: 카메라가 현재 이동 중인지 추적
+- `personDetected`: 사람이 감지되었는지 추적
+- `explosionTriggered`: 폭발이 이미 트리거되었는지 중복 방지
+- `isExploding`, `isDarkening`, `isResetting`: 각 효과 단계별 상태 관리
+
+**사람 감지 로직**:
+- MediaPipe를 통해 실시간으로 사람 감지
+- 설정된 임계값 이상의 파티클이 감지되면 사람 존재로 판단
+- 사람 감지 후 설정된 대기 시간(2초) 후 카메라 이동 시작
+
+**카메라 이동 로직**:
+- Z축을 따라 천천히 앞으로 이동 (50 → -10)
+- 설정된 이동 속도로 부드럽게 이동
+- Z 좌표가 폭발 트리거 값(0.3)에 도달하면 폭발 시작
+- 목표 위치(-10)에 도달하면 이동 정지
+
+**폭발 효과 로직**:
+- 카메라 위치를 기준으로 폭발 위치 계산
+- 폭발 파티클 시스템에 위치 전달하여 폭발 시작
+- 설정된 지속 시간(5초) 후 화면 어두워지기 시작
+
+**화면 전환 로직**:
+- HTML div 요소를 사용한 검은 화면 오버레이 생성
+- CSS opacity를 이용한 부드러운 페이드 효과
+- 설정된 지속 시간(10초) 후 시스템 리셋
+
+**시스템 리셋 로직**:
+- 카메라를 초기 위치로 복귀
+- 모든 상태 변수 초기화
+- 폭발 파티클 완전 리셋
+- 검은 화면 제거
+- 새로운 사이클 준비
+
+### 3. `explosion-particles.js` - 폭발 효과 파티클 시스템
+
+**목적**: 카메라 시점에서 중앙으로 폭발하는 불꽃놀이 효과를 구현
+
+**주요 로직**:
+
+**초기화 로직**:
+- 설정된 개수의 파티클을 생성 (기본 2000개)
+- 각 파티클의 위치, 속도, 색상, 수명 배열 초기화
+- Three.js BufferGeometry와 PointsMaterial을 사용한 파티클 시스템 구성
+- 초기에는 숨김 상태로 설정
+
+**폭발 시작 로직** (`explodeAt`):
+- 지정된 3D 위치에서 폭발 시작
+- 모든 파티클을 해당 위치로 이동
+- 불꽃놀이 색상(빨강, 주황, 노랑, 흰색)을 확률적으로 할당
+- 3D 구면 좌표계를 사용하여 사방으로 균등하게 분산되는 속도 벡터 생성
+- 수평각(0~2π)과 수직각(0~π)을 랜덤하게 설정하여 자연스러운 분산 구현
+
+**파티클 업데이트 로직**:
+- 각 프레임마다 파티클 위치를 속도에 따라 업데이트
+- 중력 효과를 적용하여 아래쪽으로 떨어지는 물리 시뮬레이션
+- 파티클 수명을 증가시키고 투명도를 점진적으로 감소
+- 수명이 끝나거나 완전히 투명해진 파티클은 화면 밖으로 이동시켜 제거
+
+**색상 관리 로직**:
+- 매번 폭발할 때마다 새로운 색상을 할당하여 자연스러운 다양성 확보
+- 투명도 변화에 따라 색상도 함께 페이드 아웃
+- AdditiveBlending을 사용하여 밝고 선명한 불꽃 효과 구현
+
+**리셋 로직**:
+- 시스템 리셋 시 모든 파티클을 중앙으로 이동
+- 다음 폭발을 위해 깨끗한 상태로 준비
+- 상태 변수 초기화
+
+### 4. `index.html` - 메인 HTML 파일
+
+**목적**: 웹 애플리케이션의 기본 구조와 외부 라이브러리 로드
+
+**주요 구성 요소**:
+- **웹캠 비디오**: MediaPipe를 위한 웹캠 스트림 캡처 (숨김 처리)
+- **마스크 캔버스**: MediaPipe Selfie Segmentation을 위한 마스크 처리 캔버스 (숨김 처리)
+- **디버그 캔버스**: 사람 인식 영역을 시각적으로 표시하는 캔버스 (상단 고정)
+- **외부 라이브러리**: Three.js, Simplex Noise, MediaPipe 라이브러리들
+- **커스텀 모듈**: 프로젝트의 JavaScript 파일들을 순서대로 로드
+
+**로드 순서**:
+1. 외부 라이브러리 (Three.js, Simplex Noise, MediaPipe)
+2. 설정 파일 (constants.js)
+3. 파티클 시스템 (background-particles.js, silhouette-particles.js, explosion-particles.js)
+4. 컨트롤러 (camera-controller.js)
+5. 메인 애플리케이션 (app.js)
 
 **역할:**
 - 웹페이지의 기본 구조를 정의
@@ -497,24 +574,61 @@ document.addEventListener('DOMContentLoaded', () => {
 3. **디버그 모드**: 빨간색 점으로 사람 인식 영역을 확인할 수 있습니다
 4. **움직이기**: 사람이 움직이면 실루엣 파티클도 따라 움직입니다
 
+## 🎬 새로운 인터랙티브 시퀀스
+
+### 동작 시나리오
+1. **사람 감지**: 웹캠으로 사람이 감지되면 2초 대기
+2. **카메라 줌인**: 카메라가 천천히 앞으로 이동 (Z: 50 → -10)
+3. **폭발 효과**: Z 좌표가 0.3에 도달하면 중앙에서 폭발 시작
+4. **화면 어두워짐**: 5초 후 검은 화면으로 전환
+5. **시스템 리셋**: 10초 후 초기 상태로 복귀하여 새로운 사이클 시작
+
+### 주요 기능
+- **실시간 사람 감지**: MediaPipe Selfie Segmentation 사용
+- **동적 카메라 이동**: Three.js PerspectiveCamera 제어
+- **폭발 파티클 효과**: 3D 구면 좌표계를 사용한 균등한 방향 분산
+- **검은 화면 전환**: HTML div 오버레이를 사용한 부드러운 페이드
+- **완전한 시스템 리셋**: 모든 상태와 파티클 초기화
+
 ## 설정 옵션
 
+### 통합 설정 (constants.js)
+
+**카메라 설정**:
+- `INITIAL_Z`: 초기 카메라 위치 (기본값: 50)
+- `TARGET_Z`: 목표 위치 (기본값: -10)
+- `MOVEMENT_SPEED`: 카메라 이동 속도 (기본값: 1)
+- `EXPLOSION_TRIGGER_Z`: 폭발 트리거 Z 좌표 (기본값: 0.3)
+
+**사람 감지 설정**:
+- `DELAY_MS`: 사람 감지 후 대기 시간 (기본값: 2000ms)
+- `THRESHOLD`: 사람 감지 임계값 (기본값: 20개 파티클)
+
+**폭발 효과 설정**:
+- `PARTICLE_COUNT`: 폭발 파티클 개수 (기본값: 2000개)
+- `PARTICLE_SIZE`: 파티클 크기 (기본값: 6)
+- `SPEED_MIN/MAX`: 폭발 속도 범위 (기본값: 3-11)
+- `DURATION_MS`: 폭발 지속 시간 (기본값: 5000ms)
+
+**화면 효과 설정**:
+- `BLACK_SCREEN_DURATION_MS`: 검은 화면 지속 시간 (기본값: 10000ms)
+- `BLACK_SCREEN_FADE_MS`: 검은 화면 페이드 시간 (기본값: 1000ms)
+- `RESET_DELAY_MS`: 리셋 대기 시간 (기본값: 3000ms)
+
 ### 배경 파티클 설정
-```javascript
-// js/background-particles.js에서 수정 가능
-const particleCount = 20000;        // 파티클 개수
-const noiseScale = 0.005;          // 노이즈 스케일
-const timeScale = 0.1;             // 시간 변화 속도
-const forceStrength = 0.8;         // 움직임 강도
-```
+
+**주요 매개변수**:
+- `particleCount`: 배경 파티클 개수 (기본값: 20000개)
+- `noiseScale`: Perlin 노이즈의 공간적 스케일 (기본값: 0.005)
+- `timeScale`: 노이즈의 시간적 변화 속도 (기본값: 0.1)
+- `forceStrength`: 파티클에 가해지는 힘의 세기 (기본값: 0.8)
 
 ### 실루엣 파티클 설정
-```javascript
-// js/silhouette-particles.js에서 수정 가능
-const particleCount = 20000;        // 파티클 개수
-const debugMode = true;            // 디버그 모드
-const scaleY = viewSize.height * 0.8; // 실루엣 크기
-```
+
+**주요 매개변수**:
+- `particleCount`: 실루엣 파티클 개수 (기본값: 20000개)
+- `debugMode`: 디버그 모드 활성화 여부 (기본값: true)
+- `scaleY`: 실루엣의 세로 크기 비율 (기본값: 화면 높이의 80%)
 
 ## 문제 해결
 
@@ -532,6 +646,21 @@ const scaleY = viewSize.height * 0.8; // 실루엣 크기
 - 파티클 개수를 줄이기 (particleCount 값 감소)
 - 브라우저 하드웨어 가속 확인
 - 다른 탭이나 애플리케이션 종료
+
+### 4. 폭발 효과가 보이지 않는 경우
+- `constants.js`에서 `EXPLOSION_TRIGGER_Z` 값 확인
+- 카메라 이동 속도가 너무 빠른지 확인 (`MOVEMENT_SPEED` 값 조정)
+- 폭발 파티클 개수가 너무 적은지 확인 (`PARTICLE_COUNT` 값 조정)
+
+### 5. 카메라 이동이 부자연스러운 경우
+- `constants.js`에서 `MOVEMENT_SPEED` 값을 더 작게 설정 (예: 0.1)
+- 사람 감지 임계값 조정 (`THRESHOLD` 값 변경)
+- 사람 감지 후 대기 시간 조정 (`DELAY_MS` 값 변경)
+
+### 6. 검은 화면이 나타나지 않는 경우
+- 브라우저 콘솔에서 오류 메시지 확인
+- HTML div 오버레이 생성 확인
+- CSS 스타일 충돌 확인
 
 ## 확장
 

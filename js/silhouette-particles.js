@@ -43,7 +43,8 @@ class SilhouetteParticles {
             opacity: 0.8,
             depthWrite: false,
             blending: THREE.AdditiveBlending,
-            map: this.particleTexture
+            map: this.particleTexture,
+            sizeAttenuation: true // 카메라 거리에 따른 크기 조정 활성화
         });
 
         this.silhouetteSystem = new THREE.Points(this.silhouetteGeometry, this.silhouetteMaterial);
@@ -125,5 +126,30 @@ class SilhouetteParticles {
     
     setDebugMode(enabled) {
         this.debugMode = enabled;
+    }
+    
+    // 사람 감지 여부 확인 메서드
+    isPersonDetected() {
+        if (!this.silhouetteGeometry || !this.silhouetteGeometry.attributes.position) {
+            return false;
+        }
+        
+        const positions = this.silhouetteGeometry.attributes.position.array;
+        let visibleParticleCount = 0;
+        
+        // 화면 밖으로 보내진 파티클이 아닌 것들의 개수를 세어서 사람 감지 여부 판단
+        for (let i = 0; i < this.particleCount; i++) {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            const z = positions[i * 3 + 2];
+            
+            // 화면 밖으로 보내진 파티클이 아닌 경우 (10000보다 작은 값)
+            if (x < 10000 && y < 10000 && z < 10000) {
+                visibleParticleCount++;
+            }
+        }
+        
+        // 일정 개수 이상의 파티클이 보이면 사람이 감지된 것으로 판단 (매우 민감하게)
+        return visibleParticleCount > 20;
     }
 }
