@@ -4,7 +4,7 @@ const APP_CONFIG = {
     CAMERA: {
         INITIAL_Z: 50,           // 초기 카메라 위치 (배경 파티클 보기)
         TARGET_Z: -10,          // 목표 위치 (사람을 통과한 후)
-        MOVEMENT_SPEED: 0.1,   // 카메라 이동 속도 (천천히 이동)
+        MOVEMENT_SPEED: 0.05,   // 카메라 이동 속도 (천천히 이동)
         EXPLOSION_TRIGGER_Z: 0.3 // 폭발 트리거 Z 좌표
     },
     
