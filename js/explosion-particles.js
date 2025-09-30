@@ -73,8 +73,9 @@ class ExplosionParticles {
             blending: THREE.AdditiveBlending,
             map: this.particleTexture,
             sizeAttenuation: true,
-            alphaTest: 0.1, // 알파 테스트 추가로 투명 픽셀 제거
-            depthWrite: false // 깊이 쓰기 비활성화로 블렌딩 개선
+            alphaTest: 0.5, // 알파 테스트를 더 높게 설정하여 검은 픽셀 제거
+            depthWrite: false, // 깊이 쓰기 비활성화로 블렌딩 개선
+            premultipliedAlpha: false // 프리멀티플라이드 알파 비활성화
         });
         
         this.explosionSystem = new THREE.Points(this.explosionGeometry, this.explosionMaterial);
