@@ -4,7 +4,7 @@ const APP_CONFIG = {
     CAMERA: {
         INITIAL_Z: 50,           // 초기 카메라 위치 (배경 파티클 보기)
         TARGET_Z: -10,          // 목표 위치 (사람을 통과한 후)
-        MOVEMENT_SPEED: 0.05,   // 카메라 이동 속도 (천천히 이동)
+        MOVEMENT_SPEED: 0.03,   // 카메라 이동 속도 (천천히 이동)
         EXPLOSION_TRIGGER_Z: 0.3 // 폭발 트리거 Z 좌표
     },
     
@@ -30,7 +30,7 @@ const APP_CONFIG = {
     
     // 화면 효과 설정
     SCREEN_EFFECTS: {
-        BLACK_SCREEN_DURATION_MS: 10000,  // 검은 화면 지속 시간 (밀리초)
+        BLACK_SCREEN_DURATION_MS: 2000,  // 검은 화면 지속 시간 (밀리초)
         BLACK_SCREEN_FADE_MS: 1000,      // 검은 화면 페이드 시간 (밀리초)
         RESET_DELAY_MS: 3000             // 리셋 대기 시간 (밀리초)
     },
