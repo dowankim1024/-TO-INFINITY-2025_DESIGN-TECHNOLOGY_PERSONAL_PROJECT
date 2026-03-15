@@ -49,7 +49,11 @@ const APP_CONFIG = {
         COUNT: 20000,          // 실루엣 파티클 개수
         SIZE: 1.0,            // 실루엣 파티클 크기
         OPACITY: 0.8,         // 실루엣 파티클 투명도
-        ALPHA_TEST: 0.01      // 알파 테스트 값
+        ALPHA_TEST: 0.01,     // 알파 테스트 값
+        BASE_SAMPLE_STEP: 4,  // 먼 거리에서의 마스크 샘플 간격
+        MAX_SAMPLE_STEP: 16,  // 아주 가까울 때의 최대 샘플 간격
+        REDUCTION_START_Z: 8, // 이 거리보다 가까워질 때만 감쇠 시작
+        FULL_REDUCTION_Z: -5  // 이 거리에서 최대 샘플 간격 도달
     }
 };
 

@@ -1,9 +1,10 @@
 class SilhouetteParticles {
-    constructor(scene, camera, particleCount = 20000) {
+    constructor(scene, camera, particleCount = APP_CONFIG.SILHOUETTE_PARTICLES.COUNT) {
         this.scene = scene;
         this.camera = camera;
         this.particleCount = particleCount;
         this.debugMode = false;
+        this.visibleParticleCount = 0;
         
         this.init();
         this.setupMediaPipe();
@@ -37,10 +38,10 @@ class SilhouetteParticles {
 
         this.silhouetteMaterial = new THREE.PointsMaterial({
             color: 0xffffff,
-            size: 1.0,
+            size: APP_CONFIG.SILHOUETTE_PARTICLES.SIZE,
             transparent: true,
-            alphaTest: 0.01,
-            opacity: 0.8,
+            alphaTest: APP_CONFIG.SILHOUETTE_PARTICLES.ALPHA_TEST,
+            opacity: APP_CONFIG.SILHOUETTE_PARTICLES.OPACITY,
             depthWrite: false,
             blending: THREE.AdditiveBlending,
             map: this.particleTexture,
@@ -48,6 +49,7 @@ class SilhouetteParticles {
         });
 
         this.silhouetteSystem = new THREE.Points(this.silhouetteGeometry, this.silhouetteMaterial);
+        this.silhouetteGeometry.setDrawRange(0, 0);
         this.scene.add(this.silhouetteSystem);
     }
     
@@ -57,6 +59,14 @@ class SilhouetteParticles {
         const height = 2 * Math.tan(vFOV / 2) * depth;
         const width = height * camera.aspect;
         return { width, height };
+    }
+
+    getSamplingStep() {
+        const { REDUCTION_START_Z, FULL_REDUCTION_Z, BASE_SAMPLE_STEP, MAX_SAMPLE_STEP } = APP_CONFIG.SILHOUETTE_PARTICLES;
+        const zoomRange = Math.max(REDUCTION_START_Z - FULL_REDUCTION_Z, 0.0001);
+        const rawProgress = THREE.MathUtils.clamp((REDUCTION_START_Z - this.camera.position.z) / zoomRange, 0, 1);
+        const zoomProgress = rawProgress * rawProgress * (3 - 2 * rawProgress);
+        return Math.round(THREE.MathUtils.lerp(BASE_SAMPLE_STEP, MAX_SAMPLE_STEP, zoomProgress));
     }
     
     setupMediaPipe() {
@@ -78,19 +88,18 @@ class SilhouetteParticles {
 
             const posAttr = this.silhouetteGeometry.attributes.position.array;
             let pIndex = 0;
+            const samplingStep = this.getSamplingStep();
+            const viewSize = this.getViewSizeAtDepth(this.camera, Math.max(this.camera.position.z, 0.1));
+            const scaleY = viewSize.height * 0.8; // 화면 높이의 80%로 설정
+            const scaleX = scaleY * (this.maskCanvas.width / this.maskCanvas.height); // 비율 유지
             
-            for (let y = 0; y < this.maskCanvas.height; y += 4) {
-                for (let x = 0; x < this.maskCanvas.width; x += 4) {
+            for (let y = 0; y < this.maskCanvas.height && pIndex < this.particleCount; y += samplingStep) {
+                for (let x = 0; x < this.maskCanvas.width && pIndex < this.particleCount; x += samplingStep) {
                     const i = (y * this.maskCanvas.width + x) * 4;
                     if (data[i] > 200 && pIndex < this.particleCount) {
                         let ndcX = (x / this.maskCanvas.width) * 2 - 1;
                         let ndcY = -((y / this.maskCanvas.height) * 2 - 1);
-                        
-                        // 카메라 뷰 크기에 맞춰 스케일 계산 (높이를 화면에 꽉 맞춤)
-                        const viewSize = this.getViewSizeAtDepth(this.camera, this.camera.position.z);
-                        const scaleY = viewSize.height * 0.8; // 화면 높이의 80%로 설정
-                        const scaleX = scaleY * (this.maskCanvas.width / this.maskCanvas.height); // 비율 유지
-                        
+
                         posAttr[pIndex * 3] = -ndcX * scaleX;
                         posAttr[pIndex * 3 + 1] = ndcY * scaleY;
                         posAttr[pIndex * 3 + 2] = 0; // Z축 고정
@@ -103,14 +112,9 @@ class SilhouetteParticles {
                     }
                 }
             }
-            
-            // 나머지 파티클은 화면 밖으로
-            for (let i = pIndex; i < this.particleCount; i++) {
-                posAttr[i * 3] = 10000;
-                posAttr[i * 3 + 1] = 10000;
-                posAttr[i * 3 + 2] = 10000;
-            }
-            
+
+            this.visibleParticleCount = pIndex;
+            this.silhouetteGeometry.setDrawRange(0, pIndex);
             this.silhouetteGeometry.attributes.position.needsUpdate = true;
         });
 
@@ -133,23 +137,8 @@ class SilhouetteParticles {
         if (!this.silhouetteGeometry || !this.silhouetteGeometry.attributes.position) {
             return false;
         }
-        
-        const positions = this.silhouetteGeometry.attributes.position.array;
-        let visibleParticleCount = 0;
-        
-        // 화면 밖으로 보내진 파티클이 아닌 것들의 개수를 세어서 사람 감지 여부 판단
-        for (let i = 0; i < this.particleCount; i++) {
-            const x = positions[i * 3];
-            const y = positions[i * 3 + 1];
-            const z = positions[i * 3 + 2];
-            
-            // 화면 밖으로 보내진 파티클이 아닌 경우 (10000보다 작은 값)
-            if (x < 10000 && y < 10000 && z < 10000) {
-                visibleParticleCount++;
-            }
-        }
-        
+
         // 일정 개수 이상의 파티클이 보이면 사람이 감지된 것으로 판단 (매우 민감하게)
-        return visibleParticleCount > 20;
+        return this.visibleParticleCount > APP_CONFIG.PERSON_DETECTION.THRESHOLD;
     }
 }

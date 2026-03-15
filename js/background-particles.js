@@ -1,5 +1,5 @@
 class BackgroundParticles {
-    constructor(scene, particleCount = 20000) {
+    constructor(scene, particleCount = APP_CONFIG.BACKGROUND_PARTICLES.COUNT) {
         this.scene = scene;
         this.particleCount = particleCount;
         this.noise = new SimplexNoise();
@@ -33,7 +33,7 @@ class BackgroundParticles {
 
         // 파티클 외형(Material) 설정
         this.particleMaterial = new THREE.PointsMaterial({
-            size: 2, // 이미지가 보이도록 크기를 늘림
+            size: APP_CONFIG.BACKGROUND_PARTICLES.SIZE, // 이미지가 보이도록 크기를 늘림
             map: this.particleTexture, // 이미지 텍스처 적용
             transparent: true,
             alphaTest: 0.1, // 투명도 처리
@@ -49,9 +49,9 @@ class BackgroundParticles {
         const time = this.clock.getElapsedTime();
         const positions = this.particleSystem.geometry.attributes.position.array;
 
-        const noiseScale = 0.005; // 노이즈의 공간적 스케일 (Frequency)
-        const timeScale = 0.1;   // 노이즈의 시간적 변화 속도
-        const forceStrength = 0.8; // 파티클에 가해지는 힘의 세기
+        const noiseScale = APP_CONFIG.BACKGROUND_PARTICLES.NOISE_SCALE; // 노이즈의 공간적 스케일 (Frequency)
+        const timeScale = APP_CONFIG.BACKGROUND_PARTICLES.TIME_SCALE;   // 노이즈의 시간적 변화 속도
+        const forceStrength = APP_CONFIG.BACKGROUND_PARTICLES.FORCE_STRENGTH; // 파티클에 가해지는 힘의 세기
 
         for (let i = 0; i < this.particleCount; i++) {
             const i3 = i * 3;
